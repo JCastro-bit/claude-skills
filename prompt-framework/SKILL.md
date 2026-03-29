@@ -7,171 +7,256 @@ description: Framework de prompts estructurados para Claude Code. Aplica las 5 r
 
 Framework de prompts para Claude Code. Aplica estas reglas automáticamente al ayudar a planear y construir proyectos.
 
-## Cuándo activarse
+---
 
-- El usuario pide ayuda para **planear un proyecto** sin dar contexto suficiente
-- Quiere **estructurar un prompt** o mejorar su workflow
-- Pide crear un **CLAUDE.md** para un proyecto
-- Describe un **bug** sin contexto estructurado
-- Da **feedback vago** ("mejóralo", "no me gustó", "hazlo de nuevo")
-- Quiere generar un **resumen de sesión** para retomar después
+## Triggers y comportamientos
+
+Cada trigger define CUÁNDO se activa la skill y QUÉ debe hacer Claude Code exactamente.
+
+### Trigger: Proyecto sin contexto
+
+**Detectar cuando:** El usuario pide crear, construir o planear un proyecto sin especificar QUÉ es, PARA QUIÉN es, o POR QUÉ existe.
+
+**Frases típicas:** "hazme una app de...", "crea un proyecto de...", "necesito un sistema para...", "quiero hacer una página de..."
+
+**Respuesta obligatoria:** NO escribir código. Responder con estas preguntas exactas:
+
+```
+Antes de escribir código necesito entender 3 cosas:
+
+1. **QUÉ** es exactamente? (app web, API, CLI, landing, SaaS, etc.)
+2. **PARA QUIÉN** es? (tipo de usuario, contexto, nivel técnico)
+3. **POR QUÉ** existe? (qué problema resuelve, objetivo de negocio)
+
+Y para definir bien las restricciones:
+- Stack preferido o que quieras practicar?
+- Dónde se va a deployar?
+- Mobile-first o desktop?
+- Nivel: MVP rápido / producción pulida / enterprise?
+```
+
+Solo cuando el usuario responda estas preguntas, avanzar a proponer la arquitectura en 5 fases.
 
 ---
 
-## Las 5 Reglas
+### Trigger: Feature o funcionalidad sin estructura
 
-### Regla 1 — Contexto antes de código
+**Detectar cuando:** El usuario pide una funcionalidad sin definir criterios de aceptación ni formato de entrega.
 
-Antes de escribir código, asegúrate de tener tres cosas: **QUÉ** es el proyecto, **PARA QUIÉN** es, y **CUÁL** es el objetivo. Si el usuario no proporciona esta información, pregúntala antes de continuar.
+**Frases típicas:** "agrega un login", "necesito que envíe emails", "ponle pagos", "hazle un dashboard"
 
-**Regla mental:** Si el prompt no responde QUÉ, PARA QUIÉN y POR QUÉ — no está listo. Agregar 30 segundos de contexto ahorra 30 minutos de rehacer.
+**Respuesta obligatoria:** Reformular el pedido en patrón RCF antes de implementar:
 
-Ejemplo de prompt con contexto suficiente:
 ```
-Voy a construir una aplicación web donde los clientes de una barbería
-puedan ver los horarios disponibles y reservar una cita.
+Entiendo que necesitas [lo que pidió]. Para hacerlo bien, confirmemos:
 
-Público: hombres 25-45, mobile-first, poco pacientes (tiene que ser rápido)
-Objetivo de negocio: reducir las llamadas al local y las citas perdidas
-Funcionalidades principales: ver disponibilidad en calendario, reservar,
-recibir confirmación, y cancelar con 24h de anticipación
+**RESULTADO:** [reformular qué debe existir al final]
 
-Usa el stack que consideres más eficiente para este caso.
-Antes de escribir código, proponme la arquitectura.
-```
+**CRITERIO** — cómo sabemos que está bien:
+- [criterio inferido 1]
+- [criterio inferido 2]
+- [criterio inferido 3]
 
-### Regla 2 — Divide en fases, no pidas todo de una vez
+**FORMATO** — cómo te lo entrego:
+- [formato inferido]
 
-Propón siempre un plan de 5 fases con checkpoints. Si algo sale mal, solo se repite ESA fase — no se empieza todo desde cero.
-
-| Fase | Qué se hace | Para qué sirve |
-|------|-------------|-----------------|
-| **1. Planificación** | Arquitectura, dependencias, modelo de datos | Validar que se entiende el proyecto antes de escribir código |
-| **2. Fundación** | Setup del proyecto, configuración base | Tener una base sólida donde construir encima |
-| **3. Construcción** | Una funcionalidad a la vez | Control de calidad pieza por pieza |
-| **4. Integración** | Conectar las piezas entre sí | Verificar que todo funciona junto |
-| **5. Pulido** | Responsive, errores, performance, SEO | Que esté listo para entregar o publicar |
-
-Cada fase es un checkpoint. Presenta el plan al usuario y espera validación antes de avanzar a la siguiente fase.
-
-### Regla 3 — Especifica las restricciones, no solo el resultado
-
-Si el usuario no menciona restricciones, pregunta por:
-- **Tecnologías preferidas** o las que ya usa en el proyecto
-- **Servicios externos** a integrar (pagos, emails, auth, APIs)
-- **Lo que NO quiere** — restricciones y límites explícitos
-- **Destino** — hosting, plataforma, dispositivos principales
-- **Nivel de complejidad** — MVP rápido / producción pulida / enterprise
-
-### Regla 4 — Patrón RCF (Resultado -> Criterio -> Formato)
-
-Cada pedido debe tener estos tres elementos. Si el usuario no los proporciona, ayúdalo a estructurarlos:
-
-| Elemento | Pregunta que responde | Ejemplo |
-|----------|----------------------|---------|
-| **RESULTADO** | ¿Qué quiero que exista al final? | "Un sistema que genere cotizaciones en PDF" |
-| **CRITERIO** | ¿Cómo sé que está bien hecho? | "Debe calcular impuestos, enviar por email, y guardar historial" |
-| **FORMATO** | ¿Cómo me lo entregas? | "Código comentado + instrucciones de setup + datos de prueba" |
-
-Ejemplo estructurado:
-```
-RESULTADO: Un endpoint que procese pagos.
-
-CRITERIO:
-- Acepta los métodos de pago más comunes
-- Maneja errores (pago rechazado, fondos insuficientes, timeout)
-- Retorna una respuesta clara con el status
-- Guarda un registro de cada transacción
-- Envía confirmación al comprador
-
-FORMATO:
-- Código comentado explicando la lógica en cada paso
-- Un archivo de test con 3 casos (pago exitoso, rechazado, error de red)
-- Variables de entorno documentadas
+Ajusta o agrega lo que falte y arranco.
 ```
 
-**Regla mental:** Si el prompt no tiene RESULTADO, CRITERIO y FORMATO, le faltan datos. No llenes los vacíos con suposiciones — pregunta.
+Inferir criterios y formato razonables del contexto, pero siempre pedir confirmación antes de implementar.
 
-### Regla 5 — Itera con feedback específico, nunca repitas desde cero
+---
 
-Cuando el usuario da feedback vago ("no me gustó", "mejóralo", "hazlo más profesional"), guíalo a ser específico:
+### Trigger: Feedback vago
 
-- Pide que enumere los cambios concretos (1, 2, 3...)
-- Pregunta QUÉ específicamente no le gustó
-- Sugiere el formato de feedback enumerado
+**Detectar cuando:** El usuario expresa insatisfacción sin especificar qué cambiar.
 
-Ejemplo de feedback específico:
+**Frases exactas a detectar:**
+- "no me gustó"
+- "hazlo de nuevo"
+- "mejóralo"
+- "hazlo más profesional"
+- "no es lo que quería"
+- "está feo"
+- "cámbialo"
+- "no sirve"
+
+**Respuesta obligatoria:** NO rehacer nada. Pedir feedback enumerado:
+
 ```
-Funciona bien pero necesito 4 ajustes:
-1. El color de fondo del header debería ser más oscuro
-2. El botón principal debe decir "Reservar ahora" en vez de "Enviar"
-3. Agrega un contador arriba del botón: "47 citas agendadas esta semana"
-4. El subtítulo es muy largo — resúmelo a máximo 12 palabras
+Para hacer los cambios correctos necesito que me digas específicamente qué ajustar.
+
+Usa este formato:
+1. [Qué cambiar] — [cómo debería quedar]
+2. [Qué cambiar] — [cómo debería quedar]
+3. ...
+
+Por ejemplo:
+1. El header — debería ser más oscuro
+2. El botón — debe decir "Reservar" en vez de "Enviar"
+3. La tipografía — más grande en mobile
+
+Así hago los cambios exactos sin romper lo que ya funciona.
 ```
 
 ---
 
-## Debugging estructurado
+### Trigger: Bug sin contexto
 
-Cuando el usuario reporta un bug sin contexto suficiente, guíalo a proporcionar:
+**Detectar cuando:** El usuario reporta un error pegando solo el mensaje de error, o dice "no funciona" / "se rompió" sin más detalle.
+
+**Respuesta obligatoria:** Antes de investigar, pedir el contexto estructurado:
 
 ```
-Tengo un error en [DÓNDE].
+Para resolver esto rápido necesito 4 datos:
 
-Qué intentaba hacer:
-[La acción que disparó el error]
+1. **Qué intentabas hacer:** [la acción que disparó el error]
+2. **Qué esperabas que pasara:** [el resultado correcto]
+3. **Qué pasó en realidad:** [el comportamiento incorrecto]
+4. **Error exacto:** [pega el error completo del terminal/consola]
 
-Qué esperaba que pasara:
-[El resultado correcto]
+Con eso identifico la causa raíz, te explico por qué pasa, lo corrijo,
+y verifico que no rompa nada más.
+```
 
-Qué pasó en realidad:
-[El error o comportamiento incorrecto]
+Si el usuario ya proporcionó el error completo y hay suficiente contexto para diagnosticar, proceder directamente sin pedir más información.
 
-Error exacto:
-[Pega el error del terminal o la consola]
+---
 
-Acciones:
-1. Identifica la causa raíz
-2. Explícame en una oración por qué pasa
-3. Corrígelo
-4. Muéstrame el antes y después del cambio
-5. Verifica que no rompa nada más
+### Trigger: Crear CLAUDE.md
+
+**Detectar cuando:** El usuario pide crear un CLAUDE.md o configurar un proyecto para Claude Code.
+
+**Respuesta obligatoria:** Usar el template de `references/claude-md-template.md` y preguntar sección por sección:
+
+```
+Voy a crear el CLAUDE.md para este proyecto. Necesito que completes:
+
+1. **Nombre del proyecto:** [?]
+2. **Qué hace y para quién:** [una oración]
+3. **Stack:** [tecnologías]
+4. **Reglas obligatorias:** [qué NO debe hacer Claude, convenciones]
+5. **Contexto del negocio:** [cliente, usuario final, problema]
+6. **Estado actual:** [qué está hecho, qué falta]
+7. **Variables de entorno:** [lista]
+
+Si ya tienes código en el proyecto, puedo inferir varias de estas
+leyendo la estructura. ¿Quieres que lo haga?
+```
+
+Si el proyecto ya tiene código, leer la estructura y pre-llenar las secciones que se puedan inferir, pidiendo confirmación del resto.
+
+---
+
+### Trigger: Cerrar sesión
+
+**Detectar cuando:** El usuario dice que va a cerrar, terminar, o parar la sesión.
+
+**Frases típicas:** "voy a cerrar", "hasta aquí por hoy", "guárdame el progreso", "resumen de sesión", "vamos a parar"
+
+**Respuesta obligatoria:** Generar resumen técnico usando el template de `references/claude-md-template.md` (sección Resumen de sesión):
+
+```markdown
+# Resumen de sesión — [PROYECTO] — [FECHA]
+
+## Archivos creados/modificados
+- `archivo.ts` — [qué hace]
+
+## Funcionalidades completas
+- [x] [funcionalidad]
+
+## Pendiente
+- [ ] [lo que falta]
+
+## Decisiones técnicas
+- [Decisión]: [por qué]
+
+## Bugs conocidos
+- [si hay]
+
+## Último cambio
+[descripción]
+
+## Para retomar
+Pega este resumen al inicio de la nueva sesión y escribe:
+"Retomemos donde dejamos."
 ```
 
 ---
 
-## Generación de CLAUDE.md
+### Trigger: Retomar sesión
 
-Cuando el usuario pida crear un CLAUDE.md, usa el template de `references/claude-md-template.md`. Pregunta la información necesaria para completar cada sección:
+**Detectar cuando:** El usuario pega un resumen de sesión anterior o dice "retomemos donde dejamos".
 
-1. Nombre y descripción del proyecto
-2. Stack tecnológico
-3. Estructura de carpetas
-4. Reglas y convenciones
-5. Contexto del negocio
-6. Estado actual del proyecto
-7. Variables de entorno
+**Respuesta obligatoria:** Leer el resumen, confirmar el estado, y preguntar:
+
+```
+Revisé el resumen. Estamos en:
+- [estado actual resumido en 1-2 líneas]
+- Pendiente: [lista corta]
+
+¿Seguimos con [siguiente item pendiente] o prefieres otra cosa?
+```
 
 ---
 
-## Gestión de sesiones
+## Desarrollo en 5 fases
 
-### Al cerrar una sesión
+Cuando se tiene contexto suficiente (QUÉ, PARA QUIÉN, POR QUÉ + restricciones), proponer el plan en este formato exacto:
 
-Cuando el usuario indique que va a cerrar la sesión o lo pida explícitamente, genera un resumen técnico con:
+```
+## Plan de desarrollo — [nombre del proyecto]
 
-1. Qué archivos se crearon/modificaron y qué hace cada uno
-2. Qué funcionalidades están completas
-3. Qué queda pendiente
-4. Decisiones técnicas tomadas y por qué
-5. Bugs conocidos o cosas por revisar
-6. El último cambio realizado
+### Fase 1: Planificación
+- [ ] Arquitectura de carpetas
+- [ ] Modelo de datos (tablas/esquemas y relaciones)
+- [ ] Lista de dependencias
+- [ ] Flujo del usuario paso a paso
+**Checkpoint:** Revisar y aprobar antes de escribir código.
 
-Formatea el resumen para que pueda pegarse al inicio de una nueva sesión.
+### Fase 2: Fundación
+- [ ] Inicializar proyecto con la arquitectura aprobada
+- [ ] Configurar base de datos / esquemas
+- [ ] Variables de entorno (.env.example)
+- [ ] Configuración base (linter, scripts, etc.)
+**Checkpoint:** Verificar que el proyecto arranca sin errores.
 
-### Al retomar una sesión
+### Fase 3: Construcción
+- [ ] [Funcionalidad 1 — la más crítica]
+- [ ] [Funcionalidad 2]
+- [ ] [Funcionalidad 3]
+**Checkpoint:** Cada funcionalidad se prueba individualmente antes de seguir.
 
-Si el usuario pega un resumen de sesión anterior o dice "retomemos donde dejamos", lee el resumen y continúa exactamente desde ese punto.
+### Fase 4: Integración
+- [ ] Conectar [componente A] con [componente B]
+- [ ] Flujo completo end-to-end
+- [ ] Validar datos entre módulos
+**Checkpoint:** El flujo principal funciona completo de principio a fin.
+
+### Fase 5: Pulido
+- [ ] Responsive / mobile
+- [ ] Manejo de errores y edge cases
+- [ ] Loading states y UX
+- [ ] Performance y optimización
+**Checkpoint:** Listo para deploy o entrega.
+```
+
+**Reglas de las fases:**
+- NUNCA avanzar a la siguiente fase sin aprobación explícita del usuario.
+- Si algo falla en una fase, solo se repite ESA fase.
+- La Fase 3 se descompone en una funcionalidad a la vez — no construir todo junto.
+
+---
+
+## Reglas generales siempre activas
+
+Estas reglas aplican en TODO momento, no solo en triggers específicos:
+
+1. **No adivinar.** Si falta información para tomar una decisión técnica importante, preguntar.
+2. **No rehacer desde cero.** Si algo no funciona, iterar sobre lo existente con cambios específicos.
+3. **Enumerar siempre.** Al proponer cambios, listarlos con números para que el usuario pueda aprobar, rechazar, o modificar cada uno.
+4. **Documentar mientras se construye.** Al terminar cada fase, ofrecer documentar lo construido en el README.
+5. **Feedback = números.** Si el usuario da feedback, responder confirmando cada punto numerado y el cambio que se hará.
 
 ---
 
@@ -179,12 +264,11 @@ Si el usuario pega un resumen de sesión anterior o dice "retomemos donde dejamo
 
 | Situación | Qué hacer |
 |-----------|-----------|
-| Empezar un proyecto | "Antes de escribir código, dame la arquitectura y el modelo de datos" |
-| Pedir una feature | Usar RESULTADO -> CRITERIO -> FORMATO |
-| Corregir algo | Enumerar cambios específicos (1, 2, 3...) |
-| Algo no funciona | Describir: qué intenté, qué esperaba, qué pasó, error exacto |
-| Cerrar sesión | Pedir resumen técnico del estado actual |
-| Abrir sesión nueva | Pegar resumen + "retomemos donde dejamos" |
-| Documentar | "Documenta lo que construimos en el README" |
-| Revisar calidad | "Revisa el código: errores, edge cases, y optimizaciones" |
-| Preparar entrega | "Prepara el proyecto para deploy: variables, config, checklist" |
+| Empezar un proyecto | Pedir QUÉ, PARA QUIÉN, POR QUÉ → proponer 5 fases |
+| Pedir una feature | Reformular en RESULTADO -> CRITERIO -> FORMATO |
+| Corregir algo | Pedir cambios enumerados (1, 2, 3...) |
+| Algo no funciona | Pedir: qué intenté, qué esperaba, qué pasó, error exacto |
+| Cerrar sesión | Generar resumen técnico estructurado |
+| Abrir sesión nueva | Leer resumen + confirmar estado + preguntar siguiente paso |
+| Crear CLAUDE.md | Usar template + preguntar sección por sección |
+| Feedback vago | NO rehacer — pedir feedback específico enumerado |
