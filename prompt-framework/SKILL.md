@@ -1,3 +1,8 @@
+---
+name: prompt-framework
+description: Framework de prompts estructurados para Claude Code. Aplica las 5 reglas (contexto, fases, restricciones, RCF, feedback), debugging estructurado, generación de CLAUDE.md y gestión de sesiones.
+---
+
 # Skill: prompt-framework
 
 Framework de prompts para Claude Code. Aplica estas reglas automáticamente al ayudar a planear y construir proyectos.
